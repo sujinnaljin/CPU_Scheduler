@@ -14,7 +14,6 @@
 #define TIME_QUANTUM 3
 #define MAX_CPU_BURST_TIME 10
 #define MAX_IO_BURST_TIME 5
-#define MAX_ARRIVAL_TIME 7
 #define MAX_PRIORITY 4
 
 typedef enum {false, true} bool;
@@ -48,12 +47,13 @@ typedef struct priority_queue {
 void swap(Process *a, Process *b);
 int pq_push(priority_queue *q, Process value, scheduling_method scheduling_method);
 Process pq_pop(priority_queue *q, scheduling_method scheduling_method);
-Process createRandomProcess(int uniqueId);
+Process createRandomProcess(void);
 
 //전역변수
-int currentTime;
-bool isCpuBusy;
-bool isIOBusy;
+int currentTime = 0;
+bool isCpuBusy = false;
+bool isIOBusy = false;
+int uniqueId = 0;
 
 Process initialProcessArr[MAX_SIZE]; //나중에 값 계산 위함
 Process runningCPUProcess;
@@ -67,7 +67,7 @@ char middleLineCPU[65536];
 
 
 //메인 알고리즘 관련
-void doScheduling(scheduling_method sch_method, priority_queue *jobQueue, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue);
+void doScheduling(scheduling_method sch_method, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue);
 void doIOOperation(Process selectedProcess, priority_queue *readyQueue, priority_queue *waitingQueue, scheduling_method sch_method);
 void doCPUOperation(Process selectedProcess, priority_queue *waitingQueue, priority_queue *terminatedQueue);
 
@@ -91,22 +91,6 @@ int main(int argc, const char * argv[]) {
     priority_queue readyQueue = {.size = 0};
     priority_queue waitingQueue = {.size = 0};
     priority_queue terminatedQueue = {.size = 0};
-    priority_queue jobQueue = {.size = 0};
-    
-    //jobQueue에 생성한 프로세스 넣어줌
-    for (int i = 0; i<MAX_SIZE; i++) {
-        Process randomProcess = createRandomProcess(i);
-        pq_push(&jobQueue, randomProcess, FCFS_scheduling); //나중에 time 체크하면서 빼낼때 arrival time 대로 빼내야 하니까 FCFS 스케쥴링대로
-        initialProcessArr[randomProcess.process_id] = randomProcess; //나중에 값 계산하기 위함
-    }
-    
-    //프로세스 상태 프린트하는 함수
-    showInitialProcess();
-    
-    //초기값 설정
-    currentTime = 0;
-    isCpuBusy = false;
-    isIOBusy = false;
     
     //사용자 입력 받아서 해당 스케쥴러 알고리즘 실행
     char *guide_letter =
@@ -125,7 +109,7 @@ int main(int argc, const char * argv[]) {
     scanf("%d", &sch_method);
     
     if(0<= sch_method && sch_method <= 5){
-        doScheduling(sch_method, &jobQueue, &readyQueue, &waitingQueue, &terminatedQueue);
+        doScheduling(sch_method, &readyQueue, &waitingQueue, &terminatedQueue);
     } else {
         printf("잘못된 입력입니다. 프로그램을 종료합니다. \n");
         return 0;
@@ -144,11 +128,11 @@ int main(int argc, const char * argv[]) {
 
 //////////////Process//////////////
 
-Process createRandomProcess(int uniqueId) {
+Process createRandomProcess() {
     int process_id = uniqueId;
     int cpu_burst_time = rand()%(MAX_CPU_BURST_TIME)+1; // cpu burst time 이 1 이상이어야 하니까 1 더해줌. 1부터 max time 까지.
     int io_burst_time = cpu_burst_time <= 1 ? 0 : rand()%(MAX_IO_BURST_TIME+1); //cpu 시간 1 이하인데 io 가 있을 수는 없으니까 cpu busrt 1이면 io burst 0으로 할당
-    int arrival_time = rand()%(MAX_ARRIVAL_TIME+1); //랜덤 타임으로 arrive. 0 부터 max time까지.
+    int arrival_time = currentTime;
     int priority = rand() % (MAX_PRIORITY+1);
     Process process = {.process_id = process_id, .cpu_burst_time = cpu_burst_time, .io_burst_time = io_burst_time, .arrival_time = arrival_time, .priority = priority};
     return process;
@@ -292,30 +276,20 @@ Process pq_pop(priority_queue* q, scheduling_method scheduling_method) {
 
 
 ////////////메인 알고리즘//////////////
-void doScheduling(scheduling_method sch_method, priority_queue *jobQueue, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue){
+void doScheduling(scheduling_method sch_method, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue){
     //tie break 상황은 그냥 queue에서 맨 상위 노드에 있는걸로.
     while (terminatedQueue-> size != MAX_SIZE) {
         drawTimeLine();
         drawTopBottomLine();
-    
-        //생성된 프로세스 arrivalTime 체크해서 job 큐에서 reday 큐로 할당.
-        while(true){
-            if (jobQueue->size > 0) {
-                //arrivalTime 순으로 할당 된거 꺼냄. FCFS 방식
-                Process tempPop = pq_pop(jobQueue, FCFS_scheduling);
-                if(tempPop.arrival_time == currentTime){
-                    //현재 시간에 arrive 됐으면 readyQueue에 할당.
-                    pq_push(readyQueue, tempPop, sch_method);
-                } else {
-                    //현재 시간 아니면 다시 집어넣고 while 종료
-                    pq_push(jobQueue, tempPop, FCFS_scheduling);
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
         
+        //매 시간마다 랜덤으로 프로세스 readyQueue에 할당. max size 까지
+        if(rand()%2 == 0 && uniqueId < MAX_SIZE){
+            Process randomProcess = createRandomProcess();
+            pq_push(readyQueue, randomProcess, sch_method);
+            initialProcessArr[randomProcess.process_id] = randomProcess; //나중에 값 계산하기 위함
+            uniqueId++;
+        }
+    
         if (isCpuBusy) {
             //non preemtive 는 하던 작업 마저 수행
             //preemtive 는 ready queue에 다음 프로세스가 있을때 현재 프로세스보다 더 프라이어리티 높나 체크. 현재가 높으면 하던거 수행. 안높으면 원래 하던거(running CPU process)는 레디 큐로 할당해주고 우선순위 높은거를 running cpu process로 바꿔야함
