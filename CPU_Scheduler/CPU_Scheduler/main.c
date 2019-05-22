@@ -15,6 +15,7 @@
 #define MAX_CPU_BURST_TIME 10
 #define MAX_IO_BURST_TIME 5
 #define MAX_PRIORITY 4
+#define MAX_ARRIVAL_TIME 10
 
 typedef enum {false, true} bool;
 
@@ -47,13 +48,12 @@ typedef struct priority_queue {
 void swap(Process *a, Process *b);
 int pq_push(priority_queue *q, Process value, scheduling_method scheduling_method);
 Process pq_pop(priority_queue *q, scheduling_method scheduling_method);
-Process createRandomProcess(void);
+Process createRandomProcess(int uniqueId);
 
 //전역변수
 int currentTime = 0;
 bool isCpuBusy = false;
 bool isIOBusy = false;
-int uniqueId = 0;
 
 Process initialProcessArr[MAX_SIZE]; //나중에 값 계산 위함
 Process runningCPUProcess;
@@ -67,7 +67,7 @@ char middleLineCPU[65536];
 
 
 //메인 알고리즘 관련
-void doScheduling(scheduling_method sch_method, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue);
+void doScheduling(scheduling_method sch_method, priority_queue *jobQueue, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue);
 void doIOOperation(Process selectedProcess, priority_queue *readyQueue, priority_queue *waitingQueue, scheduling_method sch_method);
 void doCPUOperation(Process selectedProcess, priority_queue *waitingQueue, priority_queue *terminatedQueue);
 
@@ -84,55 +84,77 @@ void showInitialProcess(void);
 //알고리즘 성능 체크 출력 with table
 void evaluateAlgorithm(priority_queue *terminatedQueue);
 
+//다른 알고리즘 수행 의사
+bool isContinueOtherAlgo(void);
+
+
+//초기환경 세팅
+void initailizeQueue(priority_queue *queue);
+void setEnv(priority_queue *jobQueue, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue);
 
 int main(int argc, const char * argv[]) {
     
     //Queue 생성
+    priority_queue jobQueue = {.size = 0};
     priority_queue readyQueue = {.size = 0};
     priority_queue waitingQueue = {.size = 0};
     priority_queue terminatedQueue = {.size = 0};
     
-    //사용자 입력 받아서 해당 스케쥴러 알고리즘 실행
-    char *guide_letter =
-    "수행하고자하는 알고리즘의 번호를 선택해주세요\n"
-    "0 : FCFS\n"
-    "1 : SJF\n"
-    "2 : STRF\n"
-    "3 : Preemtive Priority\n"
-    "4 : Non Preempvie Priority\n"
-    "5 : RR\n"
-    ;
-    
-    printf("%s",guide_letter);
-    
-    int sch_method;
-    scanf("%d", &sch_method);
-    
-    if(0<= sch_method && sch_method <= 5){
-        doScheduling(sch_method, &readyQueue, &waitingQueue, &terminatedQueue);
-    } else {
-        printf("잘못된 입력입니다. 프로그램을 종료합니다. \n");
-        return 0;
+  
+    //초기에 프로세스 생성
+    for (int i = 0; i<MAX_SIZE; i++) {
+        initialProcessArr[i] = createRandomProcess(i); //나중에 값 계산하기 위함
     }
     
-    //모두 마친 후 스케쥴링 알고리즘 성능 평가
-    evaluateAlgorithm(&terminatedQueue);
-    
-    //간트 차트 그림
-    printGanttChart();
-    
-    puts("\nbye~");
-    
+    //프로세스 상태 프린트하는 함수
+    showInitialProcess();
+
+    while (true) {
+        //사용자 입력 받아서 해당 스케쥴러 알고리즘 실행
+        char *guide_letter =
+        "수행하고자하는 알고리즘의 번호를 선택해주세요. 종료를 원하시면 이외의 숫자를 눌러주세요\n"
+        "0 : FCFS\n"
+        "1 : SJF\n"
+        "2 : STRF\n"
+        "3 : Preemtive Priority\n"
+        "4 : Non Preempvie Priority\n"
+        "5 : RR\n"
+        ;
+        
+        printf("%s",guide_letter);
+        
+        int sch_method;
+        scanf("%d", &sch_method);
+        
+        if(0<= sch_method && sch_method <= 5){
+            //큐 비워주고, 타임 0으로, CPU / IO 상태 false 로 등등..
+            setEnv(&jobQueue, &readyQueue, &waitingQueue, &terminatedQueue);
+            //스케쥴링 시작
+            doScheduling(sch_method, &jobQueue, &readyQueue, &waitingQueue, &terminatedQueue);
+            //모두 마친 후 스케쥴링 알고리즘 성능 평가
+            evaluateAlgorithm(&terminatedQueue);
+            //간트 차트 그림
+            printGanttChart();
+            
+            if (!isContinueOtherAlgo()) {
+                puts("\nbye~");
+                break;
+            }
+        } else {
+            puts("\nbye~");
+            break;
+        }
+    }
     return 0;
 }
 
 //////////////Process//////////////
 
-Process createRandomProcess() {
+Process createRandomProcess(int uniqueId) {
     int process_id = uniqueId;
     int cpu_burst_time = rand()%(MAX_CPU_BURST_TIME)+1; // cpu burst time 이 1 이상이어야 하니까 1 더해줌. 1부터 max time 까지.
     int io_burst_time = cpu_burst_time <= 1 ? 0 : rand()%(MAX_IO_BURST_TIME+1); //cpu 시간 1 이하인데 io 가 있을 수는 없으니까 cpu busrt 1이면 io burst 0으로 할당
-    int arrival_time = currentTime;
+    int arrival_time = rand()%(MAX_ARRIVAL_TIME+1);
     int priority = rand() % (MAX_PRIORITY+1);
     Process process = {.process_id = process_id, .cpu_burst_time = cpu_burst_time, .io_burst_time = io_burst_time, .arrival_time = arrival_time, .priority = priority};
     return process;
@@ -276,19 +298,30 @@ Process pq_pop(priority_queue* q, scheduling_method scheduling_method) {
 
 
 ////////////메인 알고리즘//////////////
-void doScheduling(scheduling_method sch_method, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue){
+void doScheduling(scheduling_method sch_method, priority_queue *jobQueue, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue){
     //tie break 상황은 그냥 queue에서 맨 상위 노드에 있는걸로.
     while (terminatedQueue-> size != MAX_SIZE) {
         drawTimeLine();
         drawTopBottomLine();
         
-        //매 시간마다 랜덤으로 프로세스 readyQueue에 할당. max size 까지
-        if(rand()%2 == 0 && uniqueId < MAX_SIZE){
-            Process randomProcess = createRandomProcess();
-            pq_push(readyQueue, randomProcess, sch_method);
-            initialProcessArr[randomProcess.process_id] = randomProcess; //나중에 값 계산하기 위함
-            uniqueId++;
+        //생성된 프로세스 arrivalTime 체크해서 job 큐에서 reday 큐로 할당.
+        while(true){
+            if (jobQueue->size > 0) {
+                //arrivalTime 순으로 할당 된거 꺼냄. FCFS 방식
+                Process tempPop = pq_pop(jobQueue, FCFS_scheduling);
+                if(tempPop.arrival_time == currentTime){
+                    //현재 시간에 arrive 됐으면 readyQueue에 할당.
+                    pq_push(readyQueue, tempPop, sch_method);
+                } else {
+                    //현재 시간 아니면 다시 집어넣고 while 종료
+                    pq_push(jobQueue, tempPop, FCFS_scheduling);
+                    break;
+                }
+            } else {
+                break;
+            }
         }
+
     
         if (isCpuBusy) {
             //non preemtive 는 하던 작업 마저 수행
@@ -517,3 +550,37 @@ void evaluateAlgorithm(priority_queue *terminatedQueue){
     printf("Average Turnaround time : %d\n\n", totalTurnaroundTime/MAX_SIZE);
 }
 
+
+////////////////초기환경 세팅////////////////
+void initailizeQueue(priority_queue *queue){
+    while (queue -> size > 0) {
+        pq_pop(queue, FCFS_scheduling);
+    }
+}
+
+
+void setEnv(priority_queue *jobQueue, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue){
+    currentTime = 0;
+    isCpuBusy = false;
+    isIOBusy = false;
+    initailizeQueue(jobQueue);
+    initailizeQueue(readyQueue);
+    initailizeQueue(waitingQueue);
+    initailizeQueue(terminatedQueue);
+    for (int i = 0; i < MAX_SIZE; i++) {
+        pq_push(jobQueue, initialProcessArr[i], FCFS_scheduling); //나중에 time 체크하면서 빼낼때 arrival time 대로 빼내야 하니까 FCFS 스케쥴링대로
+    }
+    timeLine[0] = '\0';
+    topLine[0] = '\0';
+    bottomLine[0] = '\0';
+    middleLineIO[0] = '\0';
+    middleLineCPU[0] = '\0';
+}
+
+///////////다른 알고리즘 수행 의사///////////
+bool isContinueOtherAlgo(){
+    puts("\n 다른 알고리즘을 사용하시겠습니까? 계속 하시려면 1을, 종료를 원하시면 1 외의 숫자를 눌러주세요");
+    int continueOtherAlgo;
+    scanf("%d", &continueOtherAlgo);
+    return continueOtherAlgo == 1 ? true : false;
+}
