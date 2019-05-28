@@ -7,7 +7,7 @@
 //
 
 #include <stdio.h>
-#include <stdlib.h> //역할 : rand()
+#include <stdlib.h> //rand()
 #include <string.h> //strcat, sprintf
 
 #define MAX_SIZE 5 //최대 생성 프로세스 사이즈 지정
@@ -184,21 +184,21 @@ int pq_push(priority_queue* q, Process value, scheduling_method scheduling_metho
 
     switch(scheduling_method){
         case FCFS_scheduling : case RR_scheduling :
-            while (current > 0 && (q ->heap[current].arrival_time) <= (q ->heap[parent].arrival_time)) {
+            while (current > 0 && (q ->heap[current].arrival_time) < (q ->heap[parent].arrival_time)) {
                 swap(&(q->heap[current]), &(q ->heap[parent]));
                 current = parent;
                 parent = (parent - 1) / 2;
             }
             break;
         case SJF_scheduling: case STRF_scheduling :
-            while (current > 0 && (q ->heap[current].cpu_burst_time) <= (q ->heap[parent].cpu_burst_time)) {
+            while (current > 0 && (q ->heap[current].cpu_burst_time) < (q ->heap[parent].cpu_burst_time)) {
                 swap(&(q->heap[current]), &(q ->heap[parent]));
                 current = parent;
                 parent = (parent - 1) / 2;
             }
             break;
         case NonPreempviePriority_scheduling: case PreemtivePriority_scheduling :
-            while (current > 0 && (q ->heap[current].priority) <= (q ->heap[parent].priority)) {
+            while (current > 0 && (q ->heap[current].priority) < (q ->heap[parent].priority)) {
                 swap(&(q->heap[current]), &(q ->heap[parent]));
                 current = parent;
                 parent = (parent - 1) / 2;
@@ -233,11 +233,11 @@ Process pq_pop(priority_queue* q, scheduling_method scheduling_method) {
         case FCFS_scheduling : case RR_scheduling :
             while (leftChild < q->size) {
                 //left child 가 있는데 max node의 arrival time 이 더 큰 경우
-                if ((q->heap[maxNode]).arrival_time >= (q->heap[leftChild]).arrival_time) {
+                if ((q->heap[maxNode]).arrival_time > (q->heap[leftChild]).arrival_time) {
                     maxNode = leftChild;
                 }
                 //right child 까지 있는데 max node(방금전까지 leftChild의 값)의 arrival time 이 더 큰 경우
-                if (rightChild < q->size && q->heap[maxNode].arrival_time >= q->heap[rightChild].arrival_time) {
+                if (rightChild < q->size && q->heap[maxNode].arrival_time > q->heap[rightChild].arrival_time) {
                     maxNode = rightChild;
                 }
 
@@ -254,10 +254,10 @@ Process pq_pop(priority_queue* q, scheduling_method scheduling_method) {
             break;
         case SJF_scheduling: case STRF_scheduling :
             while (leftChild < q->size) {
-                if ((q->heap[maxNode]).cpu_burst_time >= (q->heap[leftChild]).cpu_burst_time) {
+                if ((q->heap[maxNode]).cpu_burst_time > (q->heap[leftChild]).cpu_burst_time) {
                     maxNode = leftChild;
                 }
-                if (rightChild < q->size && q->heap[maxNode].cpu_burst_time >= q->heap[rightChild].cpu_burst_time) {
+                if (rightChild < q->size && q->heap[maxNode].cpu_burst_time > q->heap[rightChild].cpu_burst_time) {
                     maxNode = rightChild;
                 }
                 
@@ -274,10 +274,10 @@ Process pq_pop(priority_queue* q, scheduling_method scheduling_method) {
             break;
         case NonPreempviePriority_scheduling: case PreemtivePriority_scheduling :
             while (leftChild < q->size) {
-                if ((q->heap[maxNode]).priority >= (q->heap[leftChild]).priority) {
+                if ((q->heap[maxNode]).priority > (q->heap[leftChild]).priority) {
                     maxNode = leftChild;
                 }
-                if (rightChild < q->size && q->heap[maxNode].priority >= q->heap[rightChild].priority) {
+                if (rightChild < q->size && q->heap[maxNode].priority > q->heap[rightChild].priority) {
                     maxNode = rightChild;
                 }
                 
