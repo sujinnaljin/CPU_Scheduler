@@ -232,9 +232,11 @@ Process pq_pop(priority_queue* q, scheduling_method scheduling_method) {
     switch(scheduling_method){
         case FCFS_scheduling : case RR_scheduling :
             while (leftChild < q->size) {
+                //left child 가 있는데 max node의 arrival time 이 더 큰 경우
                 if ((q->heap[maxNode]).arrival_time >= (q->heap[leftChild]).arrival_time) {
                     maxNode = leftChild;
                 }
+                //right child 까지 있는데 max node(방금전까지 leftChild의 값)의 arrival time 이 더 큰 경우
                 if (rightChild < q->size && q->heap[maxNode].arrival_time >= q->heap[rightChild].arrival_time) {
                     maxNode = rightChild;
                 }
@@ -304,7 +306,7 @@ void doScheduling(scheduling_method sch_method, priority_queue *jobQueue, priori
         drawTimeLine();
         drawTopBottomLine();
         
-        //생성된 프로세스 arrivalTime 체크해서 job 큐에서 reday 큐로 할당.
+        //생성된 프로세스 arrivalTime 체크해서 job 큐에서 reday 큐로 할당. 원래는 랜덤으로 프로세스 들어오겠지만 각 스케쥴링마다 같은 프로세스 사용해야하므로 jobQueue라는 저장공간에 있는 프로세스 꺼내다 씀
         while(true){
             if (jobQueue->size > 0) {
                 //arrivalTime 순으로 할당 된거 꺼냄. FCFS 방식
@@ -324,7 +326,7 @@ void doScheduling(scheduling_method sch_method, priority_queue *jobQueue, priori
 
     
         if (isCpuBusy) {
-            //non preemtive 는 하던 작업 마저 수행
+            //non preemtive 는 하던 작업 마저 수행 - cpu가 busy 상태면 전에 수행하던 프로세스가 전역변수 runningCPUProcess 에 할당되어 있을 것
             //preemtive 는 ready queue에 다음 프로세스가 있을때 현재 프로세스보다 더 프라이어리티 높나 체크. 현재가 높으면 하던거 수행. 안높으면 원래 하던거(running CPU process)는 레디 큐로 할당해주고 우선순위 높은거를 running cpu process로 바꿔야함
             //밑에 공통적으로 doCPUOperation() 있음. switch 문에서는 runningProcess 뭘로 할거냐 결정해주는 것
             switch (sch_method) {
@@ -355,14 +357,17 @@ void doScheduling(scheduling_method sch_method, priority_queue *jobQueue, priori
                     }
                     break;
                 case RR_scheduling:
+                    //만약에 레디큐에 프로세스 없으면 원래 수행되던 애가 타임 퀀텀 관계 없이 계속 수행될 것.
+                    //레디큐에 프로세스들 있으면 현재 돌리고 있는 프로세스의 타임퀀텀 체크
                     if(readyQueue -> size > 0){
                         Process tempProcess = pq_pop(readyQueue, sch_method);
-                        //RR - 현재 진행되는 프로세스가 timequantum 이상으로 수행됐나 체크. 넘었으면 다음 프로세스 수행
+                        //RR - 현재 진행되는 프로세스가 timequantum 이상으로 수행됐나 체크. 안넘었으면 이전 프로세스 계속 수행.
+                        //넘었으면 레디큐에 있던 다른 프로세스 수행
                         if(runningCPUProcess.continued_time >= TIME_QUANTUM){
-
                             runningCPUProcess.continued_time = 0; //rr 타임 퀀텀 다다르면 원래 프로세스 지속 시간 초기화
-                            int tempCurrent = currentTime + 1;
-                            runningCPUProcess.arrival_time = tempCurrent; //시간 다시 설정해서 레디큐에 들어가게 해야함. 안그러면 얘네들 초기값으로 들어가서 우선적으로 다시 수행될 것
+                            //이번 타임(currentTime)에 마저 cpu 에 할당해서 수행시킬 것이 아니라, readyQueue 에 넣어줘야함
+                            //이때 시간 다시 설정해서 레디큐에 들어가게 해야함. 안그러면 얘네들 초기값으로 들어가서 우선적으로 다시 수행될 것
+                            runningCPUProcess.arrival_time = currentTime;
                             pq_push(readyQueue, runningCPUProcess, sch_method);
                             runningCPUProcess = tempProcess;
                         } else {
@@ -479,7 +484,7 @@ void doCPUOperation(Process selectedProcess, priority_queue *waitingQueue, prior
 void drawTimeLine(){
     char time[10];
     sprintf(time, "%d   ", currentTime%10); //간트차트 예쁘게 그려지기 위해서 %10 해줘야함
-    strcat(timeLine, time);
+    strcat(timeLine, time); //추가
 }
 
 void drawTopBottomLine(){
