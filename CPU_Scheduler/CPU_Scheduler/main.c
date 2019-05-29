@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h> //rand()
 #include <string.h> //strcat, sprintf
+#include <time.h>
 
 #define MAX_SIZE 5 //최대 생성 프로세스 사이즈 지정
 #define TIME_QUANTUM 3
@@ -94,6 +95,7 @@ void setEnv(priority_queue *jobQueue, priority_queue *readyQueue, priority_queue
 
 int main(int argc, const char * argv[]) {
     
+    srand((unsigned int)time(NULL));
     //Queue 생성
     priority_queue jobQueue = {.size = 0};
     priority_queue readyQueue = {.size = 0};
