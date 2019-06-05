@@ -7,7 +7,7 @@
 
    언어: C Language
 
-###2. CPU scheduling
+### 2. CPU scheduling
 
    CPU scheduling이란 multi programming을 가능하게 하는 OS의 동작 기법이다. 각 프로세스에 CPU를 적절히 할당하여 시스템의 성능을 향상 시키며 CPU 이용률의 극대화를 목표로 한다.
 
@@ -23,11 +23,11 @@
 
 #### First Come, First Served(FCFS)
 
-​    FCFS 방식은 먼저 도착한 프로세스를 먼저 실행하는 방법이다. non-preemptive 방식 알고리즘으로, 수행중인  프로세스는 입출력 요구가 발생하지 않는 이상 종료될 때까지 수행 되며, 다른 프로세스들은 준비 큐에서 기다린다. 비교적 간단하지만 작업량이 많은 프로세스가 CPU를 우선 차지해서 다른 프로세스들이 오랜시간 기다려야 하는 상황인 호위 상태(convoy effect)가 발생할 수 있다.
+FCFS 방식은 먼저 도착한 프로세스를 먼저 실행하는 방법이다. non-preemptive 방식 알고리즘으로, 수행중인  프로세스는 입출력 요구가 발생하지 않는 이상 종료될 때까지 수행 되며, 다른 프로세스들은 준비 큐에서 기다린다. 비교적 간단하지만 작업량이 많은 프로세스가 CPU를 우선 차지해서 다른 프로세스들이 오랜시간 기다려야 하는 상황인 호위 상태(convoy effect)가 발생할 수 있다.
 
 #### Shortest Job First(SJF) & Shortest Remaining Time First(SRTF)
 
-​    SJF는 남은 CPU 수행 시간이 가장 짧은 프로세스에게 CPU를 할당해주는 방법으로 평균 대기시간을 최소로 하는 것을 목표로 한다. 효율적이지만 프로세스의 남은 CPU burst time 이라는 future knowledge 를 요구하기 때문에 실제로 적용하기에는 한계가 있다. 또한 요구 시간이 긴 프로세스에 대해 starvation 현상이 발생할 수 있다. SJF는 비선점형와 선점형 모두에 적용될 수 있는데, 선점형 SJF 스케줄링이 바로 SRTF 스케줄링이다. 해당 스케줄링 알고리즘은 현재 수행되고 있는 프로세스의 remaining CPU burst time보다 작은 remaining CPU burst time을 가진 프로세스가 있다면 현재 프로세스를 중단하고 해당 프로세스에 CPU를 할당 한다.
+SJF는 남은 CPU 수행 시간이 가장 짧은 프로세스에게 CPU를 할당해주는 방법으로 평균 대기시간을 최소로 하는 것을 목표로 한다. 효율적이지만 프로세스의 남은 CPU burst time 이라는 future knowledge 를 요구하기 때문에 실제로 적용하기에는 한계가 있다. 또한 요구 시간이 긴 프로세스에 대해 starvation 현상이 발생할 수 있다. SJF는 비선점형와 선점형 모두에 적용될 수 있는데, 선점형 SJF 스케줄링이 바로 SRTF 스케줄링이다. 해당 스케줄링 알고리즘은 현재 수행되고 있는 프로세스의 remaining CPU burst time보다 작은 remaining CPU burst time을 가진 프로세스가 있다면 현재 프로세스를 중단하고 해당 프로세스에 CPU를 할당 한다.
 
 #### Preemptive Priority & Non Preemptive Priority
 
@@ -42,18 +42,18 @@
 ### 2. Scheduler 시스템 구성도
 
    해당 시스템의 흐름은 다음과 같다. 
- 	1. n개의 랜덤 프로세스 생성.
- 	2. 스케줄링 방법 선택. (FCFS, SJF, SRTF, preemptive Priority, non preemptive Priority, RR 중 하나)
- 	3. 해당 스케줄링 진행.
+   
+1. n개의 랜덤 프로세스 생성.
+	
+2. 스케줄링 방법 선택. (FCFS, SJF, SRTF, preemptive Priority, non preemptive Priority, RR 중 하나)
+
+3. 해당 스케줄링 진행.
 
 4. evaluation (ATT, AWT)
 
 5. 2-4 반복
 
-
-
-![image-20190605192419156](/Users/kangsujin/Library/Application Support/typora-user-images/image-20190605192419156.png)
-
+![scheduler](https://github.com/sujinnaljin/CPU_Scheduler/tree/master/images/scheduler.png)
 
 
 ### 3. 시뮬레이터의 모듈
@@ -87,7 +87,7 @@ typedef struct priority_queue {
 
 
 
-현재까지 수행 된 시간을 나타낸다*.* 턴마다 *1*씩 증가한다*.*
+현재까지 수행 된 시간을 나타낸다. 턴마다 1씩 증가한다.
 
 ```c
 int currentTime = 0;
@@ -95,7 +95,7 @@ int currentTime = 0;
 
 
 
-CPU*가 다른 프로세스에 의해 수행되고 있는지 파악할 수 있다*.*
+CPU가 다른 프로세스에 의해 수행되고 있는지 파악할 수 있다.
 
 ```c
 bool isCpuBusy = false;
@@ -103,7 +103,7 @@ bool isCpuBusy = false;
 
 
 
-I/O가 다른 프로세스에 의해 수행되고 있는지 파악할 수 있다*.*
+I/O가 다른 프로세스에 의해 수행되고 있는지 파악할 수 있다.
 
 ```c
 bool  isIOBusy = false;
@@ -111,7 +111,7 @@ bool  isIOBusy = false;
 
 
 
-현재 *CPU*를 수행하고 있는 프로세스
+현재 CPU를 수행하고 있는 프로세스
 
 ```c
 Process runningCPUProcess;
@@ -119,7 +119,7 @@ Process runningCPUProcess;
 
 
 
-현재 *I/O*를 수행하고 있는 프로세스
+현재 I/O를 수행하고 있는 프로세스
 
 ```c
 Process runningIOProccess;
@@ -129,7 +129,7 @@ Process runningIOProccess;
 
 #### 주요 함수
 
-*queue*에 *process*를 집어 넣거나 빼낸다*.* 그 과정에 인자로 넘겨 받은 스케줄링 메소드를 바탕으로 큐를 정렬한다*.* 이때 정렬 기준이 되는 *Process*의 속성은 *FCFS, RR* 에서는 *arrival_time, SJF, STRF* 에서는 *cpu_burst_time, NonPreempviePriority, PreemtivePriority* 에서는 *priority*이다*.*
+queue에 *process*를 집어 넣거나 빼낸다*.* 그 과정에 인자로 넘겨 받은 스케줄링 메소드를 바탕으로 큐를 정렬한다*.* 이때 정렬 기준이 되는 *Process*의 속성은 *FCFS, RR* 에서는 *arrival_time, SJF, STRF* 에서는 *cpu_burst_time, NonPreempviePriority, PreemtivePriority* 에서는 *priority*이다.
 
 ```c
 int pq_push(priority_queue *q, Process value, scheduling_method scheduling_method);
@@ -138,7 +138,7 @@ Process pq_pop(priority_queue *q, scheduling_method scheduling_method);
 
 
 
-cpu_burst_time, *io_burst_time, arrival_time, priority* 등의 속성이 정해진 최대값 내에서 *random*으로 할당된 프로세스를 생성하는 함수이다*.* cpu_burst_time <= 1 일때는 *io_burst_time* 이 남아 있으면 안되므로 *0*을 할당한다*.*
+cpu_burst_time, *io_burst_time, arrival_time, priority* 등의 속성이 정해진 최대값 내에서 *random*으로 할당된 프로세스를 생성하는 함수이다. cpu_burst_time <= 1 일때는 *io_burst_time* 이 남아 있으면 안되므로 *0*을 할당한다.
 
 ```c
 Process createRandomProcess(int uniqueId);
@@ -146,7 +146,7 @@ Process createRandomProcess(int uniqueId);
 
 
 
-알고리즘 성능 체크하고 테이블을 출력한다*. terminate_time - arrival_time - cpu_burst_time* 을 통해 각 프로세스의 *waiting Time*을 구하고*, terminate_time - arrival_time* 을 통해 *turnaroundTime*을 구한다*.*
+알고리즘 성능 체크하고 테이블을 출력한다. terminate_time - arrival_time - cpu_burst_time 을 통해 각 프로세스의 waiting Time을 구하고, terminate_time - arrival_time 을 통해 turnaroundTime을 구한다.
 
 ```c
 void evaluateAlgorithm(priority_queue *terminatedQueue);
@@ -154,7 +154,7 @@ void evaluateAlgorithm(priority_queue *terminatedQueue);
 
 
 
-메인 스케쥴링 알고리즘 관련된 함수이다*.* 다음 턴에 *CPU*를 할당받을 *Process*를 결정하고 *I/O*를 수행중이거나*,* 수행해야하는 프로세스의 동작을 돕는다*. CPU*나 *I/O*의 *idle* 상태를 판단하기도 한다*.*
+메인 스케쥴링 알고리즘 관련된 함수이다. 다음 턴에 CPU를 할당받을 Process를 결정하고 I/O를 수행중이거나, 수행해야하는 프로세스의 동작을 돕는다. CPU나 I/O의 idle 상태를 판단하기도 한다.
 
 ```c
 void doScheduling(scheduling_method sch_method, priority_queue *jobQueue, priority_queue *readyQueue, priority_queue *waitingQueue, priority_queue *terminatedQueue);
@@ -220,7 +220,7 @@ currentTime++; 9.cpu랑 IO 체크 작업 다 했으니까 time 올려주고 해�
 
 
 
-특정 프로세스가 *I/O*를 수행하게 되었을때 실행되는 함수이다*.* 들어온 *process*의 *io_burst_time*을 *1*만큼 줄이고 다음에도 해당 프로세스가 *I/O operation*을 수행할지 여부를 결정한다*.*
+특정 프로세스가 I/O를 수행하게 되었을때 실행되는 함수이다. 들어온 process의 io_burst_time을 1만큼 줄이고 다음에도 해당 프로세스가 I/O operation을 수행할지 여부를 결정한다.
 
 ```c
 void doIOOperation(Process selectedProcess, priority_queue *readyQueue, priority_queue *waitingQueue, scheduling_method sch_method);
@@ -276,7 +276,7 @@ doCPUOperation 구현부의 메인 로직은 다음과 같다
 
    최종적으로 연산된 각 프로세스 간의 평균 Waiting Time과 Turnaround Time을 비교하면 다음과 같다.  
 
-![image-20190605192517794](/Users/kangsujin/Library/Application Support/typora-user-images/image-20190605192517794.png)
+![evaluate](https://github.com/sujinnaljin/CPU_Scheduler/tree/master/images/evaluate.png)
 
 
 
