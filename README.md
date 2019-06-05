@@ -53,7 +53,7 @@ SJF는 남은 CPU 수행 시간이 가장 짧은 프로세스에게 CPU를 할�
 
 5. 2-4 반복
 
-![scheduler](https://github.com/sujinnaljin/CPU_Scheduler/tree/master/images/scheduler.png)
+![scheduler](https://github.com/sujinnaljin/CPU_Scheduler/blob/master/images/scheduler.png)
 
 
 ### 3. 시뮬레이터의 모듈
@@ -276,13 +276,7 @@ doCPUOperation 구현부의 메인 로직은 다음과 같다
 
    최종적으로 연산된 각 프로세스 간의 평균 Waiting Time과 Turnaround Time을 비교하면 다음과 같다.  
 
-![evaluate](https://github.com/sujinnaljin/CPU_Scheduler/tree/master/images/evaluate.png)
-
-
-
-
-
-
+![evaluate](https://github.com/sujinnaljin/CPU_Scheduler/blob/master/images/evaluate.png)
 
 
 
